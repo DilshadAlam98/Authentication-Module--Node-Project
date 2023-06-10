@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import magoose from "mongoose";
 
 
 
@@ -56,21 +55,20 @@ const commentSchema = mongoose.Schema({
 
 
 
-const userPostSchema = magoose.Schema({
+const userPostSchema = mongoose.Schema({
     location: {
         type: String,
-        unique: true,
+        required: true,
     },
     caption: {
         type: String,
-        unique: true,
+        required: true,
     },
     tags: [taagedSchema],
     shares: [sharedSchema],
     likes: [likedSchema],
     comments: [commentSchema]
-})
-
+});
 
 const USERPOST = mongoose.model("user-post", userPostSchema);
 
