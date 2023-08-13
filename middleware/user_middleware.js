@@ -19,6 +19,8 @@ const isAccessTokenValid = async (token) => {
 }
 
 const isValidPassword = (oldPassword, newPassword) => {
+    console.log(`Old Password---${oldPassword}`);
+    console.log(`New Password---${newPassword}`);
     try {
         return compare(oldPassword, newPassword)
     } catch (err) {

@@ -19,14 +19,14 @@ router.get("/get-user", protect, user.getUser);
 router.delete("/delete/:id", user.deleteUser);
 
 /// Update User Route....
-router.put("update-user", protect, user.updateUser);
+router.put("/update-user", protect, user.updateUser);
 
 /// Get New Access Token
 router.get("/access-token", user.createNewAccessToken);
 
 /// Forget Password
 
-router.post("/forget-password", user.forgetPassword);
+router.post("/forget-password", protect, user.forgetPassword);
 
 
 export default router;

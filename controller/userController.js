@@ -108,9 +108,6 @@ const getUser = async (req, res) => {
 
 /// Update user------
 
-
-
-
 const updateUser = async (req, res) => {
     const { first_name, last_name, email, gender, mobile, id } = req.body;
     if (!id) {
@@ -125,7 +122,7 @@ const updateUser = async (req, res) => {
             WHERE id = ${id}
             RETURNING *
         `;
-        const user = await databaseClient.query(updateQuery, [first_name, last_name, email, gender, mobile, id]);
+        const user = await databaseClient.query(updateQuery, [first_name, last_name, email, mobile, gender]);
 
         if (user.rowCount === 0) {
             return res.status(404).json({ message: "User not found" });
@@ -135,26 +132,9 @@ const updateUser = async (req, res) => {
     } catch (error) {
         return res.status(500).json({ message: "Error updating user", error: error.message });
     } finally {
-        await databaseClient.end();
+        // await databaseClient.end();
     }
 };
-
-
-
-
-
-// const updateUser = async (req, res) => {
-//     const { first_name, last_name, email, gender, mobile, id } = req.body;
-//     if (!id) {
-//         return res.status(300).json({ message: "User id is required" })
-//     }
-//     await databaseClient.connect();
-//     const user = await databaseClient.query('UPDATE "user" SET first_name = $1, last_name = $2, email = $3, mobile = $4, gender = $5 WHERE id = ${id} ', [first_name, last_name, email, gender, mobile]);
-
-//     return res.status(200).json({ message: "User updated successfully", data: user });
-
-// }
-
 
 /// GET NEW ACCESS TOKEN -------------------------------------
 
@@ -169,7 +149,7 @@ const createNewAccessToken = async (req, res) => {
     const password = decodedRefreshToken.password;
     const newAccessToken = await generateAccessToken(email, password, userId);
     const newRefreshToken = await generateRefreshToken(email, password, userId);
-    res.status(200).send({ message: true, newAccessToken, newRefreshToken });
+    res.status(200).send({ status: 200, message: "Success", newAccessToken, newRefreshToken });
 }
 
 
@@ -177,21 +157,25 @@ const createNewAccessToken = async (req, res) => {
 /// FORGET PASSWORTD----------------------------------
 
 const forgetPassword = async (req, res) => {
-    const { oldPassword, newPassword, userId } = req.body;
+    const { oldPassword, newPassword, id } = req.body;
+    await databaseClient.connect();
     try {
-        const user = await User.findOne({ userId });
-        if (user) {
-            console.log("Save Passwrod");
-            console.log(user.password);
-            const isPasswordMatch = await isValidPassword(oldPassword, user.password)
-            if (!isPasswordMatch) throw Error("Old Password not match")
-            const decryptedPassword = await hashPassword(newPassword);
-            user.password = decryptedPassword;
-            await user.save()
-            res.status(200).send("Password Updated Successfully");
-        } else {
-            res.send({ message: "User not found" })
+        if (oldPassword === newPassword) {
+            return res.status(201).json({ message: "Old Password and New Password can not be same" })
         }
+        const user = await databaseClient.query('SELECT * FROM "user" WHERE id=$1', [id]);
+        if (user.rowCount === 0) {
+            return res.status(401).json({ message: "User doesn't exist" });
+        }
+        const savedPassword = user.rows[0].password;
+        const userId = user.rows[0].id;
+        const passwordMatch = await isValidPassword(oldPassword, savedPassword);
+        if (!passwordMatch) {
+            return res.status(401).json({ message: "Old Password does not match in our records" });
+        }
+        const decryptedPassword = await hashPassword(newPassword);
+        await databaseClient.query('UPDATE "user" SET password = $1 WHERE id = $2', [decryptedPassword, userId]);
+        res.status(200).send("Password Updated Successfully");
     } catch (e) {
         console.log(e);
         res.status(500).send({ message: err.message })
