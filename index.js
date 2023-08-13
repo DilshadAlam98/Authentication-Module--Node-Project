@@ -2,7 +2,7 @@ import express from "express"
 import cors from "cors"
 import morgan from "morgan"
 import * as dotenv from 'dotenv'
-import { connectDb } from "./config/db.js"
+import { connectToDatabase } from "./config/db.js"
 import userRoutes from "./routes/user_route.js"
 import userPostRoute from "./routes/user_post_routes.js"
 
@@ -12,7 +12,7 @@ import userPostRoute from "./routes/user_post_routes.js"
 
 const app = express();
 dotenv.config()
-connectDb()
+connectToDatabase()
 
 /// MidlleWare
 
